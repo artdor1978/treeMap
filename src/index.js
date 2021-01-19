@@ -1,38 +1,59 @@
 import * as d3 from "d3";
-import * as topojson from "topojson";
 import * as styles from "../styles/index.css";
 
 let app = () => {
 	const chart = d3.select("body").append("svg").attr("id", "chart");
 	const path = d3.geoPath();
 	const legendContainer = chart.append("g").attr("id", "legend");
-	const EDUCATION_FILE =
-		"https://raw.githubusercontent.com/no-stack-dub-sack/testable-projects-fcc/master/src/data/choropleth_map/for_user_education.json";
-	const COUNTY_FILE =
-		"https://raw.githubusercontent.com/no-stack-dub-sack/testable-projects-fcc/master/src/data/choropleth_map/counties.json";
+	const url =
+		"https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/movie-data.json";
 	const getData = async () => {
-		const education = await d3.json(EDUCATION_FILE);
-		const county = await d3.json(COUNTY_FILE);
-		renderChart(education, county);
+		const data = await d3.json(url);
+		renderChart(data);
 	};
-	const renderChart = (education, county) => {
+	const renderChart = (data) => {
+		const hierarchy = d3
+			.hierarchy(data)
+			.sum((d) => d.value) //sum every child's values
+			.sort((a, b) => b.value - a.value); // and sort them in descending order ;
 		const areaWidth = window.innerWidth;
-		const areaHeight = window.innerHeight;
+		const areaHeight = window.innerHeight - 40;
 		const areaPadding = areaHeight * 0.1;
-		const bachelors = d3.extent(education, (d) => d.bachelorsOrHigher);
-		const color = d3
-			.scaleQuantize()
-			.domain(bachelors)
-			.range(["#fef0d9", "#fdcc8a", "#fc8d59", "#d7301f"]);
-		const tooltip = d3
-			.select("body")
-			.append("div")
-			.attr("id", "tooltip")
-			.style("opacity", 0);
 		chart.attr("width", areaWidth).attr("height", areaHeight);
+		const colors = [
+			"#1C1832",
+			"#9E999D",
+			"#F2259C",
+			"#347EB4",
+			"#08ACB6",
+			"#91BB91",
+			"#BCD32F",
+			"#75EDB8",
+			"#89EE4B",
+			"#AD4FE8",
+			"#D5AB61",
+			"#BC3B3A",
+			"#F6A1F9",
+			"#87ABBB",
+			"#412433",
+			"#56B870",
+			"#FDAB41",
+			"#64624F",
+		];
+		const categories = data.children.map((d) => d.name);
+		const colorScale = d3
+			.scaleOrdinal() // the scale function
+			.domain(categories) // the data
+			.range(colors); // the way the data should be shown
+		const treemap = d3
+			.treemap()
+			.size([areaWidth, areaHeight - 80])
+			.padding(1);
+		const root = treemap(hierarchy);
+		//console.log(root);
 		chart
 			.append("text")
-			.text("United States Educational Attainment")
+			.text("Movie Sales")
 			.attr("x", areaWidth / 2)
 			.attr("y", areaPadding - 40)
 			.attr("id", "title")
@@ -45,93 +66,46 @@ let app = () => {
 			.attr("text-anchor", "middle")
 			.attr("id", "description")
 			.attr("dy", "1.5em")
-			.text(
-				"Percentage of adults age 25 and older with a bachelor's degree or higher (2010-2014)"
-			)
+			.text("Top 100 Most Sold Movies Grouped by Genre")
 			.style("fill", "#006fbe");
 		chart
-			.append("g")
-			.attr("class", "counties")
-			.selectAll("path")
-			.data(topojson.feature(county, county.objects.counties).features)
+			.selectAll("rect")
+			.data(root.leaves())
 			.enter()
-			.append("path")
-			.attr("class", "county")
-			.attr("data-fips", (d) => d.id)
-			.attr("data-education", function (d) {
-				var result = education.filter(function (obj) {
-					return obj.fips === d.id;
-				});
-				if (result[0]) {
-					return result[0].bachelorsOrHigher;
-				}
-				// could not find a matching fips id in the data
-				console.log("could find data for: ", d.id);
-				return 0;
-			})
-			.attr("fill", function (d) {
-				var result = education.filter(function (obj) {
-					return obj.fips === d.id;
-				});
-				if (result[0]) {
-					return color(result[0].bachelorsOrHigher);
-				}
-				// could not find a matching fips id in the data
-				return color(0);
-			})
-			.attr("d", path)
-			.on("mouseover", (d, i) => {
-				var result = education.filter(function (obj) {
-					return obj.fips === i.id;
-				});
-				tooltip.transition().duration(200).style("opacity", 1);
-				tooltip
-					.html(
-						result[0].state +
-							"<br/>" +
-							result[0].area_name +
-							"<br/>" +
-							result[0].bachelorsOrHigher
-					)
-					.style("left", event.pageX - 25 + "px")
-					.style("top", event.pageY - 45 + "px")
-					.attr("data-education", result[0].bachelorsOrHigher);
-			})
-			.on("mouseout", function (d) {
-				tooltip.transition().duration(500).style("opacity", 0);
-			});
+			.append("rect")
+			.attr("class", "tile")
+			.attr("x", (d) => d.x0)
+			.attr("y", (d) => d.y0 + 40)
+			.attr("width", (d) => d.x1 - d.x0)
+			.attr("height", (d) => d.y1 - d.y0)
+			.attr("fill", (d) => colorScale(d.data.category))
+			.attr("data-name", (d) => d.data.name)
+			.attr("data-category", (d) => d.data.category)
+			.attr("data-value", (d) => d.data.value);
 		const legend = legendContainer
 			.selectAll("#legend")
-			.data(color.range())
+			.data(colorScale.range())
 			.enter()
 			.append("g")
-			.attr("class", "legend-label")
-			.attr(
-				"transform",
-				"translate(" + areaWidth / 2 + "," + areaPadding / 1.5 + ")"
-			);
+			.attr("transform", function (d, i) {
+				return "translate(0," + (areaHeight - 15) + ")";
+			});
 		legend
 			.append("rect")
 			.attr("x", (d, i) => areaPadding + i * 40 + 20)
 			.attr("width", 40)
 			.attr("height", 20)
+			.attr("class", "legend-item")
 			.style("fill", (d) => d);
 		legendContainer
 			.selectAll("text")
-			.data(
-				d3.range(
-					bachelors[0],
-					bachelors[1],
-					(bachelors[1] - bachelors[0]) / color.range().length
-				)
-			)
+			.data(root.leaves())
 			.enter()
 			.append("text")
-			.text((d) => d.toFixed(2))
-			.attr(
-				"transform",
-				"translate(" + areaWidth / 2 + "," + (areaPadding / 1.5 + 30) + ")"
-			)
+			.text((d) => d.data.category)
+			.attr("transform", function (d, i) {
+				return "translate(0," + (areaHeight - areaPadding / 1.5 + 30) + ")";
+			})
 			.attr("x", (d, i) => areaPadding + i * 40 + 20)
 			.style("fill", "#006fbe");
 	};
