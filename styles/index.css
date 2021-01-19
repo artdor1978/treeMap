@@ -1,0 +1,25 @@
+html {
+	font-size: 62.5%;
+}
+
+body {
+	font-family: "Roboto", sans-serif;
+	color: #006fbe;
+	background: #f1fdea;
+}
+#title {
+	font-size: 1.5rem;
+}
+
+#tooltip {
+	position: absolute;
+	text-align: center;
+	width: 6.5rem;
+	height: 2.5rem;
+	padding: 0.2rem;
+	font: 0.7rem sans-serif;
+	background: #e1e0e0;
+	border: 0px;
+	border-radius: 0.5rem;
+	pointer-events: none;
+}
