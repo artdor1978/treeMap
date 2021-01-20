@@ -68,10 +68,13 @@ let app = () => {
 			.attr("dy", "1.5em")
 			.text("Top 100 Most Sold Movies Grouped by Genre")
 			.style("fill", "#006fbe");
-		chart
-			.selectAll("rect")
+		const treeMap = chart.append("g").attr("id", "treemap");
+		/*.attr("transform", (d) => "translate(0," + 0 + ")");*/
+		treeMap
+			.selectAll("#treemap")
 			.data(root.leaves())
 			.enter()
+			/*.selectAll("rect")*/
 			.append("rect")
 			.attr("class", "tile")
 			.attr("x", (d) => d.x0)
@@ -82,6 +85,15 @@ let app = () => {
 			.attr("data-name", (d) => d.data.name)
 			.attr("data-category", (d) => d.data.category)
 			.attr("data-value", (d) => d.data.value);
+		treeMap
+		.selectAll("#treemap")
+			.data(root.leaves())
+			.enter()
+			.append("text")
+			.text((d) => d.data.name)
+			.style("fill", "red")
+			.attr("x", (d) => d.x0)
+			.attr("y", (d) => d.y0 + 55);
 		const legend = legendContainer
 			.selectAll("#legend")
 			.data(colorScale.range())
@@ -114,3 +126,4 @@ let app = () => {
 
 const root = document.querySelector("#root");
 root.appendChild(app());
+//https://medium.com/swlh/create-a-treemap-with-wrapping-text-using-d3-and-react-5ba0216c48ce
