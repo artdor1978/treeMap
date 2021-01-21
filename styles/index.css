@@ -23,3 +23,6 @@ body {
 	border-radius: 0.5rem;
 	pointer-events: none;
 }
+#legendItem, #movieTitle {
+	font-size: 0.7rem;
+}

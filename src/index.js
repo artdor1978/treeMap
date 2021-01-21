@@ -20,37 +20,13 @@ let app = () => {
 		const areaHeight = window.innerHeight - 40;
 		const areaPadding = areaHeight * 0.1;
 		chart.attr("width", areaWidth).attr("height", areaHeight);
-		const colors = [
-			"#1C1832",
-			"#9E999D",
-			"#F2259C",
-			"#347EB4",
-			"#08ACB6",
-			"#91BB91",
-			"#BCD32F",
-			"#75EDB8",
-			"#89EE4B",
-			"#AD4FE8",
-			"#D5AB61",
-			"#BC3B3A",
-			"#F6A1F9",
-			"#87ABBB",
-			"#412433",
-			"#56B870",
-			"#FDAB41",
-			"#64624F",
-		];
+		const color = d3.scaleOrdinal(d3.schemeSet3);
 		const categories = data.children.map((d) => d.name);
-		const colorScale = d3
-			.scaleOrdinal() // the scale function
-			.domain(categories) // the data
-			.range(colors); // the way the data should be shown
 		const treemap = d3
 			.treemap()
 			.size([areaWidth, areaHeight - 80])
 			.padding(1);
 		const root = treemap(hierarchy);
-		//console.log(root);
 		chart
 			.append("text")
 			.text("Movie Sales")
@@ -69,57 +45,57 @@ let app = () => {
 			.text("Top 100 Most Sold Movies Grouped by Genre")
 			.style("fill", "#006fbe");
 		const treeMap = chart.append("g").attr("id", "treemap");
-		/*.attr("transform", (d) => "translate(0," + 0 + ")");*/
 		treeMap
 			.selectAll("#treemap")
 			.data(root.leaves())
 			.enter()
-			/*.selectAll("rect")*/
 			.append("rect")
 			.attr("class", "tile")
 			.attr("x", (d) => d.x0)
 			.attr("y", (d) => d.y0 + 40)
 			.attr("width", (d) => d.x1 - d.x0)
 			.attr("height", (d) => d.y1 - d.y0)
-			.attr("fill", (d) => colorScale(d.data.category))
+			.attr("fill", (d) => color(d.data.category))
 			.attr("data-name", (d) => d.data.name)
 			.attr("data-category", (d) => d.data.category)
 			.attr("data-value", (d) => d.data.value);
 		treeMap
-		.selectAll("#treemap")
+			.selectAll("#treemap")
 			.data(root.leaves())
 			.enter()
 			.append("text")
 			.text((d) => d.data.name)
-			.style("fill", "red")
+			.style("fill", "#006fbe")
 			.attr("x", (d) => d.x0)
-			.attr("y", (d) => d.y0 + 55);
+			.attr("y", (d) => d.y0 + 55)
+			.attr("id", "movieTitle");
 		const legend = legendContainer
 			.selectAll("#legend")
-			.data(colorScale.range())
+			.data(categories)
 			.enter()
 			.append("g")
 			.attr("transform", function (d, i) {
-				return "translate(0," + (areaHeight - 15) + ")";
+				return "translate(0," + (areaHeight - 35) + ")";
 			});
 		legend
 			.append("rect")
-			.attr("x", (d, i) => areaPadding + i * 40 + 20)
-			.attr("width", 40)
+			.attr("x", (d, i) => 0 + i * 40 + 10)
+			.attr("width", 20)
 			.attr("height", 20)
 			.attr("class", "legend-item")
-			.style("fill", (d) => d);
+			.style("fill", (d) => color(d));
 		legendContainer
 			.selectAll("text")
-			.data(root.leaves())
+			.data(categories)
 			.enter()
 			.append("text")
-			.text((d) => d.data.category)
+			.text((d) => d)
 			.attr("transform", function (d, i) {
 				return "translate(0," + (areaHeight - areaPadding / 1.5 + 30) + ")";
 			})
-			.attr("x", (d, i) => areaPadding + i * 40 + 20)
-			.style("fill", "#006fbe");
+			.attr("x", (d, i) => 0 + i * 40 + 10)
+			.style("fill", "#006fbe")
+			.attr("id", "legendItem");
 	};
 	return getData();
 };
@@ -127,3 +103,4 @@ let app = () => {
 const root = document.querySelector("#root");
 root.appendChild(app());
 //https://medium.com/swlh/create-a-treemap-with-wrapping-text-using-d3-and-react-5ba0216c48ce
+//https://dev.to/hajarnasr/treemaps-with-d3-js-55p7
