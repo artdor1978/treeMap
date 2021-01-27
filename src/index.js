@@ -5,6 +5,11 @@ let app = () => {
 	const chart = d3.select("body").append("svg").attr("id", "chart");
 	const path = d3.geoPath();
 	const legendContainer = chart.append("g").attr("id", "legend");
+	const tooltip = d3
+		.select("body")
+		.append("div")
+		.attr("id", "tooltip")
+		.style("opacity", 0);
 	const url =
 		"https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/movie-data.json";
 	const getData = async () => {
@@ -58,8 +63,20 @@ let app = () => {
 			.attr("fill", (d) => color(d.data.category))
 			.attr("data-name", (d) => d.data.name)
 			.attr("data-category", (d) => d.data.category)
-			.attr("data-value", (d) => d.data.value);
-		treeMap
+			.attr("data-value", (d) => d.data.value)
+			.on("mouseover", (d, i) => {
+				//console.log("ffff",d,"aaaaa",i)
+				tooltip.transition().duration(200).style("opacity", 1);
+				tooltip
+					.html(i.data.name + "<br/>" + i.data.value)
+					.style("left", event.pageX - 25 + "px")
+					.style("top", event.pageY - 45 + "px")
+					.attr("data-value", i.data.value);
+			})
+			.on("mouseout", function (d) {
+				tooltip.transition().duration(500).style("opacity", 0);
+			});
+		/*treeMap
 			.selectAll("#treemap")
 			.data(root.leaves())
 			.enter()
@@ -68,7 +85,7 @@ let app = () => {
 			.style("fill", "#006fbe")
 			.attr("x", (d) => d.x0)
 			.attr("y", (d) => d.y0 + 55)
-			.attr("id", "movieTitle");
+			.attr("id", "movieTitle");*/
 		const legend = legendContainer
 			.selectAll("#legend")
 			.data(categories)
